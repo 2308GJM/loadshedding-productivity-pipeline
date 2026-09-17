@@ -1,0 +1,2 @@
+# No third-party deps yet — urllib and boto3 are stdlib/runtime-provided.
+# Add packages here if you extend this function.
