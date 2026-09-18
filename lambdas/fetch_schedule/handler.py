@@ -16,7 +16,7 @@ BUCKET = os.environ['BUCKET_NAME']
 SEPUSH_TOKEN = os.environ['SEPUSH_TOKEN']
 SEPUSH_AREA_ID = os.environ['SEPUSH_AREA_ID']
 
-SEPUSH_URL = f"https://developer.sepush.co.za/business/2.0/area?id={SEPUSH_AREA_ID}"
+SEPUSH_URL = f"https://developer.sepush.co.za/business/3.0/area?id={SEPUSH_AREA_ID}"
 
 
 def fetch_schedule():
