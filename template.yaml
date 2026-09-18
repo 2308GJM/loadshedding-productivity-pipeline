@@ -15,10 +15,16 @@ Parameters:
   GitHubUsername:
     Type: String
     Description: GitHub username to pull commit activity from
+  BucketName:
+    Type: String
+    Description: Globally unique S3 bucket name (avoids a CFN circular dependency)
+
 
 Resources:
   ScheduleDataBucket:
     Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
 
   FetchScheduleFunction:
     Type: AWS::Serverless::Function
@@ -29,12 +35,15 @@ Resources:
       Timeout: 30
       Environment:
         Variables:
-          BUCKET_NAME: !Ref ScheduleDataBucket
+          BUCKET_NAME: !Ref BucketName
           SEPUSH_TOKEN: !Ref SePushToken
           SEPUSH_AREA_ID: !Ref SePushAreaId
       Policies:
-        - S3WritePolicy:
-            BucketName: !Ref ScheduleDataBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: !Sub arn:aws:s3:::${BucketName}/*
       Events:
         DailySchedule:
           Type: Schedule
@@ -53,8 +62,11 @@ Resources:
           RESULTS_TABLE: !Ref ResultsTable
           GITHUB_USERNAME: !Ref GitHubUsername
       Policies:
-        - S3ReadPolicy:
-            BucketName: !Ref ScheduleDataBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: !Sub arn:aws:s3:::${BucketName}/*
         - DynamoDBCrudPolicy:
             TableName: !Ref ResultsTable
       Events:
