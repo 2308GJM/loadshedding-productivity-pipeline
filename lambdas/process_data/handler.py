@@ -16,7 +16,7 @@ table = boto3.resource('dynamodb').Table(os.environ['RESULTS_TABLE'])
 
 GITHUB_USERNAME = os.environ['GITHUB_USERNAME']
 GITHUB_EVENTS_URL = f"https://api.github.com/users/{GITHUB_USERNAME}/events/public"
-
+SEPUSH_TOKEN = os.environ.get('SEPUSH_TOKEN')
 
 def get_object_from_event(event):
     record = event['Records'][0]
@@ -47,22 +47,38 @@ def fetch_recent_commit_hours():
     return commit_hours
 
 
+def fetch_schedule_events(schedule_id):
+    """Fetch actual outage events for a given schedule ID (e.g. 'eskde-10')."""
+    url = f"https://developer.sepush.co.za/business/3.0/schedule?id={schedule_id}"
+    req = urllib.request.Request(url, headers={"Token": SEPUSH_TOKEN})
+    with urllib.request.urlopen(req, timeout=15) as response:
+        return json.loads(response.read())
+
 def extract_outage_hours(schedule_data):
     """
-    Parse EskomSePush 'events' block into a set of UTC hours affected today.
-    NOTE: adjust parsing to match the actual EskomSePush response shape
-    for your area/plan — this is a starting point, not final.
+    area_data is the raw /area response (schedules list only, no events).
+    For each auto-enabled schedule, fetch its actual events and collect
+    the affected hours for today.
     """
     outage_hours = set()
-    for event in schedule_data.get('events', []):
-        start = event.get('start')
-        end = event.get('end')
-        if not start or not end:
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+    for sched in area_data.get('schedules', []):
+        if not sched.get('auto_enabled'):
             continue
-        start_hour = int(start[11:13])
-        end_hour = int(end[11:13])
-        for h in range(start_hour, end_hour):
-            outage_hours.add(h % 24)
+        schedule_id = sched['id']
+        schedule_data = fetch_schedule_events(schedule_id)
+
+        for event in schedule_data.get('events', []):
+            start = event.get('start')
+            end = event.get('end')
+            if not start or not (start.startswith(today)):
+                continue
+            start_hour = int(start[11:13])
+            end_hour = int(end[11:13])
+            for h in range(start_hour, end_hour):
+                outage_hours.add(h % 24)
+
     return outage_hours
 
 
