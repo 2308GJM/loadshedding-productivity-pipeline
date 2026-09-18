@@ -69,6 +69,7 @@ Resources:
               Resource: !Sub arn:aws:s3:::${BucketName}/*
         - DynamoDBCrudPolicy:
             TableName: !Ref ResultsTable
+            SEPUSH_TOKEN: !Ref SePushToken
       Events:
         S3Trigger:
           Type: S3
