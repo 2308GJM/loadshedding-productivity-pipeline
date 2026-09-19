@@ -65,12 +65,18 @@ Resources:
           RESULTS_TABLE: !Ref ResultsTable
           GITHUB_USERNAME: !Ref GitHubUsername
           SEPUSH_TOKEN: !Ref SePushToken
+          DASHBOARD_BUCKET: !Ref DashboardBucketName
       Policies:
         - Statement:
             - Effect: Allow
               Action:
                 - s3:GetObject
               Resource: !Sub arn:aws:s3:::${BucketName}/*
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: !Sub arn:aws:s3:::${DashboardBucketName}/*
         - DynamoDBCrudPolicy:
             TableName: !Ref ResultsTable
 
