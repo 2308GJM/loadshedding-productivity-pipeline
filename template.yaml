@@ -18,6 +18,9 @@ Parameters:
   BucketName:
     Type: String
     Description: Globally unique S3 bucket name (avoids a CFN circular dependency)
+  DashboardBucketName:
+    Type: String
+    Description: Globally unique S3 bucket name for the public dashboard website
 
 
 Resources:
