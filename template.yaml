@@ -126,3 +126,5 @@ Outputs:
     Value: !Ref ScheduleDataBucket
   ResultsTableName:
     Value: !Ref ResultsTable
+  DashboardURL:
+    Value: !GetAtt DashboardBucket.WebsiteURL
