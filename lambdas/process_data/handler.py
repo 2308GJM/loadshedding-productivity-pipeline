@@ -88,6 +88,11 @@ def fetch_recent_summaries(limit=7):
     items = sorted(response.get('Items', []), key=lambda i: i['date'], reverse=True)
     return items[:limit]
 
+def format_hour_list(hours):
+    """Render a list of hour-of-day integers as '13:00, 14:00' style labels."""
+    if not hours:
+        return "—"
+    return ", ".join(f"{h:02d}:00" for h in sorted(hours))
 
 def render_dashboard_html(items):
     rows = ""
@@ -95,9 +100,9 @@ def render_dashboard_html(items):
         rows += f"""
         <tr>
             <td>{item['date']}</td>
-            <td>{len(item.get('outage_hours', []))}</td>
-            <td>{len(item.get('commit_hours', []))}</td>
-            <td>{item.get('lost_hours_count', 0)}</td>
+            <td>{format_hour_list(item.get('outage_hours', []))}</td>
+            <td>{format_hour_list(item.get('commit_hours', []))}</td>
+            <td>{format_hour_list(item.get('lost_coding_hours', []))}</td>
         </tr>"""
 
     return f"""<!DOCTYPE html>
@@ -116,7 +121,7 @@ def render_dashboard_html(items):
     <h1>Load-Shedding Productivity Dashboard</h1>
     <p>Coding hours lost to load-shedding, by day.</p>
     <table>
-        <tr><th>Date</th><th>Outage Hours</th><th>Commit Hours</th><th>Lost Hours</th></tr>
+        <tr><th>Date</th><th>Outage Hours (UTC)</th><th>Commit Hours (UTC)</th><th>Lost Hours (UTC)</th></tr>
         {rows}
     </table>
 </body>
