@@ -82,6 +82,56 @@ def extract_outage_hours(area_data):
 
     return outage_hours
 
+def fetch_recent_summaries(limit=7):
+    """Scan the results table and return the most recent items, newest first."""
+    response = table.scan()
+    items = sorted(response.get('Items', []), key=lambda i: i['date'], reverse=True)
+    return items[:limit]
+
+
+def render_dashboard_html(items):
+    rows = ""
+    for item in items:
+        rows += f"""
+        <tr>
+            <td>{item['date']}</td>
+            <td>{len(item.get('outage_hours', []))}</td>
+            <td>{len(item.get('commit_hours', []))}</td>
+            <td>{item.get('lost_hours_count', 0)}</td>
+        </tr>"""
+
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Load-Shedding Productivity Dashboard</title>
+    <style>
+        body {{ font-family: sans-serif; max-width: 700px; margin: 40px auto; }}
+        table {{ width: 100%; border-collapse: collapse; }}
+        th, td {{ padding: 8px 12px; border-bottom: 1px solid #ddd; text-align: left; }}
+        th {{ background: #222; color: white; }}
+    </style>
+</head>
+<body>
+    <h1>Load-Shedding Productivity Dashboard</h1>
+    <p>Coding hours lost to load-shedding, by day.</p>
+    <table>
+        <tr><th>Date</th><th>Outage Hours</th><th>Commit Hours</th><th>Lost Hours</th></tr>
+        {rows}
+    </table>
+</body>
+</html>"""
+
+
+def publish_dashboard():
+    items = fetch_recent_summaries()
+    html = render_dashboard_html(items)
+    s3.put_object(
+        Bucket=DASHBOARD_BUCKET,
+        Key="index.html",
+        Body=html,
+        ContentType="text/html",
+    )
 
 def lambda_handler(event, context):
     schedule_data = get_object_from_event(event)
