@@ -17,6 +17,7 @@ table = boto3.resource('dynamodb').Table(os.environ['RESULTS_TABLE'])
 GITHUB_USERNAME = os.environ['GITHUB_USERNAME']
 GITHUB_EVENTS_URL = f"https://api.github.com/users/{GITHUB_USERNAME}/events/public"
 SEPUSH_TOKEN = os.environ.get('SEPUSH_TOKEN')
+DASHBOARD_BUCKET = os.environ['DASHBOARD_BUCKET']
 
 def get_object_from_event(event):
     record = event['Records'][0]
