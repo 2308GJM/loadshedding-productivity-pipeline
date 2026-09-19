@@ -92,7 +92,8 @@ def format_hour_list(hours):
     """Render a list of hour-of-day integers as '13:00, 14:00' style labels."""
     if not hours:
         return "—"
-        sorted_hours = sorted(hours)
+
+    sorted_hours = sorted(hours)
     ranges = []
     start = prev = sorted_hours[0]
 
@@ -104,7 +105,7 @@ def format_hour_list(hours):
         start = prev = h
     ranges.append((start, prev))
 
-    return ", ".join(f"{h:02d}:00-{e + 1:02d}:00" for s, e in ranges)
+    return ", ".join(f"{s:02d}:00-{e + 1:02d}:00" for s, e in ranges)
 
 def render_dashboard_html(items):
     rows = ""
