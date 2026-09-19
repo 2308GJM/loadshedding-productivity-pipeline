@@ -61,6 +61,7 @@ Resources:
         Variables:
           RESULTS_TABLE: !Ref ResultsTable
           GITHUB_USERNAME: !Ref GitHubUsername
+          SEPUSH_TOKEN: !Ref SePushToken
       Policies:
         - Statement:
             - Effect: Allow
@@ -69,7 +70,7 @@ Resources:
               Resource: !Sub arn:aws:s3:::${BucketName}/*
         - DynamoDBCrudPolicy:
             TableName: !Ref ResultsTable
-            SEPUSH_TOKEN: !Ref SePushToken
+
       Events:
         S3Trigger:
           Type: S3
