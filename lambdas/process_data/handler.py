@@ -150,6 +150,8 @@ def lambda_handler(event, context):
         'lost_hours_count': len(lost_hours),
     })
 
+    publish_dashboard()
+
     return {
         "statusCode": 200,
         "body": f"Processed {today}: {len(lost_hours)} coding hour(s) overlapped with load-shedding",
