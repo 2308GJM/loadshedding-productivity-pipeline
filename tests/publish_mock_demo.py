@@ -14,6 +14,11 @@ import sys
 import os
 import boto3
 
+
+os.environ.setdefault('RESULTS_TABLE', 'loadshedding-productivity-pipeline-ResultsTable-1A2W0KKLLWGNC')
+os.environ.setdefault('GITHUB_USERNAME', '2308GJM')
+os.environ.setdefault('SEPUSH_TOKEN', 'unused-for-this-script')
+os.environ.setdefault('DASHBOARD_BUCKET', 'loadshedding-dashboard-2308gjm-01')
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lambdas', 'process_data'))
 import handler  # reuses the real render_dashboard_html / table from production code
 
