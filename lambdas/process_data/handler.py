@@ -54,7 +54,7 @@ def fetch_schedule_events(schedule_id):
     with urllib.request.urlopen(req, timeout=15) as response:
         return json.loads(response.read())
 
-def extract_outage_hours(schedule_data):
+def extract_outage_hours(area_data):
     """
     area_data is the raw /area response (schedules list only, no events).
     For each auto-enabled schedule, fetch its actual events and collect
