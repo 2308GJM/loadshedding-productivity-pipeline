@@ -93,7 +93,7 @@ def format_hour_list(hours):
     if not hours:
         return "—"
 
-    sorted_hours = sorted(hours)
+    sorted_hours = sorted(int(h) for h in hours)
     ranges = []
     start = prev = sorted_hours[0]
 
