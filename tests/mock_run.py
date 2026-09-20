@@ -53,9 +53,9 @@ def run():
 
     lost_hours = outage_hours & commit_hours
 
-    print(f"Outage hours:      {sorted(outage_hours)}")
-    print(f"Commit hours:      {sorted(commit_hours)}")
-    print(f"Lost coding hours: {sorted(lost_hours)}")
+    print(f"Outage hours:      {handler.format_hour_list(outage_hours)}")
+    print(f"Commit hours:      {handler.format_hour_list(commit_hours)}")
+    print(f"Lost coding hours: {handler.format_hour_list(lost_hours)}")
     print(f"Lost hours count:  {len(lost_hours)}")
 
 
