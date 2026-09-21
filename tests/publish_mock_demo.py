@@ -24,16 +24,61 @@ import handler  # reuses the real render_dashboard_html / table from production 
 
 DEMO_DATE = "DEMO-2026-09-20"
 
-demo_item = {
+demo_item =  [
+    {
+        'date': 'DEMO-2026-09-14',
+        'outage_hours': [6, 7, 12, 13],
+        'commit_hours': [7, 15],
+        'lost_coding_hours': [7],
+        'lost_hours_count': 1,
+    },
+    {
+        'date': 'DEMO-2026-09-15',
+        'outage_hours': [8, 9, 10, 16, 17],
+        'commit_hours': [9, 10, 20],
+        'lost_coding_hours': [9, 10],
+        'lost_hours_count': 2,
+    },
+    {
+        'date': 'DEMO-2026-09-16',
+        'outage_hours': [],
+        'commit_hours': [11, 15, 16],
+        'lost_coding_hours': [],
+        'lost_hours_count': 0,
+    },
+    {
+        'date': 'DEMO-2026-09-17',
+        'outage_hours': [12, 13, 14, 18, 19, 20],
+        'commit_hours': [12, 13, 14, 19],
+        'lost_coding_hours': [12, 13, 14, 19],
+        'lost_hours_count': 4,
+    },
+    {
+        'date': 'DEMO-2026-09-18',
+        'outage_hours': [17, 18],
+        'commit_hours': [9, 14],
+        'lost_coding_hours': [],
+        'lost_hours_count': 0,
+    },
+    {
+        'date': 'DEMO-2026-09-19',
+        'outage_hours': [13, 14, 18, 19],
+        'commit_hours': [14, 9],
+        'lost_coding_hours': [14],
+        'lost_hours_count': 1,
+    },
+    {
     'date': DEMO_DATE,
     'outage_hours': [13, 14, 18, 19],
     'commit_hours': [14, 9],
     'lost_coding_hours': [14],
     'lost_hours_count': 1,
-}
+    },
+]
 
-handler.table.put_item(Item=demo_item)
-print(f"Wrote demo item: {demo_item}")
+for demo_item in demo_items:
+    handler.table.put_item(Item=demo_item)
+    print(f"Wrote demo item: {demo_item['date']} -> lost_hours_count={demo_item['lost_hours_count']}")
 
 handler.publish_dashboard()
 print("Dashboard refreshed with demo entry.")
