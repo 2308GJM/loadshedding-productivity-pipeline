@@ -24,7 +24,7 @@ import handler  # reuses the real render_dashboard_html / table from production 
 
 DEMO_DATE = "DEMO-2026-09-20"
 
-demo_item =  [
+demo_items =  [
     {
         'date': 'DEMO-2026-09-14',
         'outage_hours': [6, 7, 12, 13],
