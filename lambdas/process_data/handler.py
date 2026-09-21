@@ -107,6 +107,36 @@ def format_hour_list(hours):
 
     return ", ".join(f"{s:02d}:00-{e + 1:02d}:00" for s, e in ranges)
 
+def render_chart_svg(items):
+    """Simple horizontal bar chart of lost hours per day, oldest to newest."""
+    chart_items = list(reversed(items))  # oldest first for left-to-right reading
+    if not chart_items:
+        return ""
+
+    bar_width = 60
+    gap = 20
+    max_bar_height = 120
+    max_lost = max((int(i.get('lost_hours_count', 0)) for i in chart_items), default=0) or 1
+
+    bars = ""
+    for idx, item in enumerate(chart_items):
+        lost = int(item.get('lost_hours_count', 0))
+        height = int((lost / max_lost) * max_bar_height) if max_lost else 0
+        x = idx * (bar_width + gap)
+        y = max_bar_height - height
+        label = item['date'].replace('DEMO-', 'D-')
+        bars += f"""
+        <rect x="{x}" y="{y}" width="{bar_width}" height="{height}" fill="#c0392b" />
+        <text x="{x + bar_width / 2}" y="{max_bar_height + 15}" font-size="10" text-anchor="middle">{label}</text>
+        <text x="{x + bar_width / 2}" y="{y - 5}" font-size="10" text-anchor="middle">{lost}</text>"""
+
+    width = len(chart_items) * (bar_width + gap)
+    return f"""
+    <svg viewBox="0 0 {width} {max_bar_height + 30}" width="100%" style="max-width: 600px; margin: 20px 0;">
+        {bars}
+    </svg>"""
+
+
 def render_dashboard_html(items):
     rows = ""
     for item in items:
@@ -132,7 +162,8 @@ def render_dashboard_html(items):
 </head>
 <body>
     <h1>Load-Shedding Productivity Dashboard</h1>
-    <p>Coding hours lost to load-shedding, by day.</p>
+    <p>Coding hours lost to load-shedding, by day. All times are UTC (24-hour clock).</p>
+    {render_chart_svg(items)}
     <table>
         <tr><th>Date</th><th>Outage Hours (UTC)</th><th>Commit Hours (UTC)</th><th>Lost Hours (UTC)</th></tr>
         {rows}
