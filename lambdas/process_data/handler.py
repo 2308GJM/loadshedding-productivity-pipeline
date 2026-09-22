@@ -82,7 +82,7 @@ def extract_outage_hours(area_data):
 
     return outage_hours
 
-def fetch_recent_summaries(limit=7):
+def fetch_recent_summaries(limit=10):
     """Scan the results table and return the most recent items, newest first."""
     response = table.scan()
     items = sorted(response.get('Items', []), key=lambda i: i['date'], reverse=True)
