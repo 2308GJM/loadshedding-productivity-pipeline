@@ -115,7 +115,7 @@ def render_chart_svg(items):
 
     bar_width = 60
     gap = 20
-    max_bar_height = 120
+    max_bar_height = 110
     max_lost = max((int(i.get('lost_hours_count', 0)) for i in chart_items), default=0) or 1
 
     bars = ""
@@ -131,8 +131,9 @@ def render_chart_svg(items):
         <text x="{x + bar_width / 2}" y="{y - 5}" font-size="10" text-anchor="middle">{lost}</text>"""
 
     width = len(chart_items) * (bar_width + gap)
+    svg_height = max_bar_height + 30
     return f"""
-    <svg viewBox="0 0 {width} {max_bar_height + 30}" width="100%" style="max-width: 600px; margin: 20px 0;">
+    <svg viewBox="0 -15 {width} {svg_height + 15}" width="100%" style="max-width: 600px; margin: 20px 0;">
         {bars}
     </svg>"""
 
