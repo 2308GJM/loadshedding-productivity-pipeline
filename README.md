@@ -46,41 +46,124 @@ EventBridge (daily) ──▶ FetchScheduleFunction ──▶ S3 (raw/YYYY-MM-DD
   rendered as human-readable ranges (e.g. `13:00-15:00`) rather than raw
   counts.
 
-## Setup
+## Prerequisites
 
-1. Install [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
-   and Docker (used for `sam build --use-container`, which avoids local
-   Python-version mismatches).
-2. Get an [EskomSePush API token](https://sepush.co.za) and find your area
-   ID via `business/3.0/areas_search?text=<suburb>`.
-3. Build and deploy:
-   ```bash
+- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) (used for
+  `sam build --use-container`, which avoids local Python-version mismatches)
+- An AWS account with an IAM user that has deploy permissions, configured via:
+```bash
+  aws configure
+```
+- An [EskomSePush API token](https://sepush.co.za)
+- Your EskomSePush area ID — find it with:
+```bash
+  curl.exe -H "Token: YOUR_TOKEN" "https://developer.sepush.co.za/business/3.0/areas_search?text=<your-suburb>"
+```
+Pick the `id` field matching your actual suburb from the returned list.
+
+## Deploying
+
+1. Build (inside a container, to avoid local Python version mismatches):
+```bash
    sam build --use-container
-   sam deploy --stack-name loadshedding-productivity-pipeline \
-     --resolve-s3 --capabilities CAPABILITY_IAM \
+```
+
+2. Deploy, passing your own values:
+```bash
+   sam deploy \
+     --stack-name loadshedding-productivity-pipeline \
+     --resolve-s3 \
+     --capabilities CAPABILITY_IAM \
      --parameter-overrides \
-       SePushToken=<your-token> \
+       SePushToken=<your-eskomsepush-token> \
        SePushAreaId=<your-area-id> \
        GitHubUsername=<your-github-username> \
        BucketName=<a-globally-unique-bucket-name> \
-       DashboardBucketName=<a-globally-unique-bucket-name>
-   ```
-4. The `DashboardURL` stack output is your public dashboard link.
+       DashboardBucketName=<a-different-globally-unique-bucket-name>
+```
+Bucket names must be globally unique across all of AWS, not just your
+account, append your username or a random suffix if a name is taken.
+
+3. Grab the dashboard URL from the deploy output, or fetch it any time with:
+```bash
+   aws cloudformation describe-stacks \
+     --stack-name loadshedding-productivity-pipeline \
+     --query "Stacks[0].Outputs" --output table
+```
+
+## Running / verifying it manually
+
+The pipeline runs automatically once a day via EventBridge, but you can
+trigger it manually to see it work immediately:
+
+```bash
+# Find your actual deployed function names
+aws lambda list-functions --query "Functions[].FunctionName" --output table
+
+# Trigger the fetch function
+aws lambda invoke --function-name <FetchScheduleFunction-name> output.json
+cat output.json
+```
+
+Check that the raw file landed in S3:
+```bash
+aws s3 ls s3://<your-bucket-name>/raw/
+```
+
+Check that the process function ran (triggered automatically by the S3
+upload above) and wrote a summary:
+```bash
+aws dynamodb scan --table-name <your-ResultsTable-name>
+```
+
+Check the process function's logs if something looks off:
+```bash
+aws logs tail /aws/lambda/<ProcessDataFunction-name> --since 10m
+```
+
+Then open the dashboard URL in a browser to see the updated table and chart.
 
 ## Testing
 
-- `tests/mock_run.py` — exercises the core outage/commit overlap logic
-  entirely locally, using mocked schedule and GitHub data. No AWS
-  credentials or deployed resources needed.
-  ```bash
-  python tests/mock_run.py
-  ```
-- `tests/publish_mock_demo.py` — writes a clearly labeled `DEMO-<date>` row
-  to the real, deployed DynamoDB table and regenerates the live dashboard,
-  so the overlap logic can be demonstrated even on a day with no real
-  load-shedding scheduled. Uses your real AWS credentials.
-  ```bash
-  python tests/publish_mock_demo.py
+**Local logic test — no AWS required:**
+```bash
+python tests/mock_run.py
+```
+Runs the outage/commit overlap calculation against mocked data entirely
+offline, to verify the core logic in isolation.
+
+**Live demo data — writes to your real, deployed dashboard:**
+```bash
+python tests/publish_mock_demo.py
+```
+Writes several clearly-labeled `DEMO-<date>` rows to the real DynamoDB table
+and regenerates the live dashboard, so the overlap logic and chart can be
+demonstrated even on a day with no real load-shedding scheduled. This uses
+your real AWS credentials and writes to your real deployed resources.
+
+**To remove demo data before final submission:**
+```bash
+aws dynamodb delete-item --table-name <your-ResultsTable-name> \
+  --key '{"date": {"S": "DEMO-2026-09-14"}}'
+# repeat for each DEMO-<date> row you added
+```
+Then trigger the fetch function once more (see above) to regenerate a clean
+dashboard with only real data.
+
+## Changing configuration later
+
+Every parameter is a deploy-time value, not hardcoded, so you can update any
+of them by redeploying with new `--parameter-overrides` — for example, to
+change area:
+```bash
+sam deploy --stack-name loadshedding-productivity-pipeline \
+  --resolve-s3 --capabilities CAPABILITY_IAM \
+  --parameter-overrides SePushAreaId=<new-area-id>
+```
+(Omit parameters you don't want to change — SAM keeps their previous values
+if you've saved them to `samconfig.toml`, or pass all of them again if not.)
+
   ```
 
 **Note:** as of recording the demo video, no load-shedding was scheduled for
@@ -132,8 +215,23 @@ aws dynamodb delete-item --table-name <results-table-name> \
   outage had technically ended. This trade-off keeps the logic simple; a
   future version could compare exact timestamps instead of hour buckets.
 - **GitHub commit activity is a proxy, not a direct measure**, of coding
-  time — it can't detect uncommitted local work, and it only reflects
+  time as it can't detect uncommitted local work, and it only reflects
   activity on the configured public GitHub account.
+
+## Real-world extension beyond personal use
+
+The same pattern that fetches external outage data, cross-reference it against an
+internal activity signal, surface the overlap and generalizes beyond tracking
+personal coding time:
+- A small business could swap GitHub commits for point-of-sale transaction
+  timestamps, to quantify exactly how much trading time and revenue is lost
+  to outages each week.
+- A call center could cross-reference outage windows against ticket volume
+  to quantify service disruption.
+- A logistics operation could tie it to dispatch timestamps to measure
+  delivery delays caused by outages.
+
+Only the second data source changes is the architecture stays the same
 
 ## Status
 
