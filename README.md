@@ -239,6 +239,11 @@ Fully working end-to-end: live daily fetch, real outage-event lookup,
 real GitHub commit cross-referencing, DynamoDB storage, and an
 auto-updating public dashboard.
 
+## Repo Verification Code
+
+WTC-ABG34SFE
+
+
 ## Demo
 
-_(link to unlisted YouTube demo video goes here)_
+https://youtu.be/g5TsP4wGA_k?si=3LRmXnDQQ8dYIk17
